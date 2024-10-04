@@ -1,34 +1,45 @@
 import requests
 from bs4 import BeautifulSoup
-
-countries = ['Uganda']
-
-for country in countries:
-    # Fetch the Wikimedia page HTML
-    url = f'https://commons.wikimedia.org/wiki/File:Location{country}.svg'
-    response = requests.get(url)
-
-    # Parse the HTML to find the actual file URL
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Find the link to the SVG file (usually in <a> tag with "original-file-link" class)
-    file_link = soup.find('a', {'class': 'internal'})  # "internal" class usually contains the link to the actual file
-
-    if file_link:
-        svg_url = file_link['href']  # Get the href and prepend 'https:'
-        print(f"Downloading {country} map from: {svg_url}")
-
-        # Download the actual SVG file
-        svg_data = requests.get(svg_url)
-
-        # Save the SVG file locally
-        with open(f'{country}.svg', 'wb') as file:
-            file.write(svg_data.content)
-            print(f"{country} map saved as {country}.svg")
-    else:
-        print(f"Could not find SVG file for {country}.")
-
-# Get all countries
+import wikipedia
+import re
 
 
+def get_wiki_image(country_name):
+    wikipedia.set_lang('en')
+    page_name = wikipedia.search(country_name)[0]
+    page = wikipedia.WikipediaPage(page_name)
+    page_html = page.html()
 
+    soup = BeautifulSoup(page_html, 'html.parser')
+
+    # underscored_country_name = '_'.join(country_name.split())
+
+    # # Flag
+    # flag_href_pattern = fr'/wiki/File:Flag_of_{underscored_country_name}.svg'
+    # flag_title_pattern = fr'Flag of {country_name}'
+    # flag_link = 'https://en.wikipedia.org' + soup.find('a', href=re.compile(flag_href_pattern),
+    #                                                    title=re.compile(flag_title_pattern), class_='mw-file-description')['href']
+    #
+    # # Emblem
+    # emblem_href_pattern = fr'/wiki/File:(Emblem|Coat_of_arms)_of_{underscored_country_name}.svg'
+    # emblem_title_pattern = fr'(Emblem|Coat of arms) of {country_name}'
+    # emblem_link = 'https://en.wikipedia.org' + soup.find('a', href=re.compile(emblem_href_pattern),
+    #                                                      title=re.compile(emblem_title_pattern), class_='mw-file-description')['href']
+    #
+    # # Map
+    # map_href_pattern = f'/wiki/File:{underscored_country_name}_(orthographic_projection).svg'
+    # map_link = 'https://en.wikipedia.org' + soup.find('a', href=map_href_pattern, class_='mw-file-description')['href']
+
+    links = soup.find_all('a', class_='mw-file-description')
+
+    flag_link, emblem_link = links[0]['href'], links[1]['href']
+    map_link = links[2]['href'] if country.split()[0] in links[2]['href'] else links[3]['href']
+
+    return flag_link, emblem_link, map_link
+
+
+
+for country in ['China', 'Taiwan', 'Japan']:
+    print(country)
+    file_url = get_wiki_image(country)
+    print(file_url)
