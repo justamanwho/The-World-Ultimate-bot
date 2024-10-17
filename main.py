@@ -1,14 +1,17 @@
 from bs4 import BeautifulSoup
 import urllib.request
+import wikipedia
 import requests
 import logging
-import json
 import os
 
 
 def get_wiki_links(country):
-    page_name = f'https://en.wikipedia.org/wiki/{country}'
-    page_html = requests.get(page_name).text
+    wikipedia.set_lang('en')
+    page_name = wikipedia.search(country)[0]
+    page = wikipedia.WikipediaPage(page_name)
+    page_html = page.html()
+
     soup = BeautifulSoup(page_html, 'html.parser')
 
     anchor_elements = [link for link in soup.find_all('a', class_='mw-file-description', limit=4)]
@@ -17,25 +20,25 @@ def get_wiki_links(country):
     flag, emblem = links[0], links[1]
 
     underscored_country_name = '_'.join(country.split())
-    data = {f'The_Flag_of_{underscored_country_name}': flag, f'The_Coat_of_Arms_of_{underscored_country_name}': emblem}
+    files_data = {f'The_Flag_of_{underscored_country_name}': flag, f'The_Coat_of_Arms_of_{underscored_country_name}': emblem}
 
     # key_map_words = ('location', 'orthographic', 'map', 'earth', 'world')
 
     # If the Country has A Seal of State, then it's added. Otherwise, it's just the map
     undefined = str(anchor_elements[2]).lower()
     if 'seal' in undefined:
-        data[f'The_Seal_of_State_of_{underscored_country_name}'] = links[2]
-        data[f'The_Map_of_{underscored_country_name}'] = links[3]
+        files_data[f'The_Seal_of_State_of_{underscored_country_name}'] = links[2]
+        files_data[f'The_Map_of_{underscored_country_name}'] = links[3]
     else:
-        data[f'The_Map_of_{underscored_country_name}'] = links[2]
+        files_data[f'The_Map_of_{underscored_country_name}'] = links[2]
 
-    return data
+    return files_data
 
 
-def get_wiki_photos_from_links(data):
+def get_wiki_photos_from_links(files_data):
     link_collection = dict()
 
-    for file_name, link in data.items():
+    for file_name, link in files_data.items():
         soup = BeautifulSoup(requests.get(link).text, 'html.parser')
         parent_div = soup.find('div', {'class': 'fullImageLink', 'id': 'file'})
 
@@ -46,6 +49,7 @@ def get_wiki_photos_from_links(data):
     return link_collection
 
 
+# add argument
 def download_image(country_name, link_collection):
     for file_name, link in link_collection.items():
         try:
@@ -61,18 +65,31 @@ def download_image(country_name, link_collection):
             logger.error(f"Wasn't able to download {file_name} with link {link}")
 
 
+def download_text_info(country_name):
+    summary = wikipedia.summary(country_name, sentences=2).split('.')[1]
+
+    underscored_country_name = '_'.join(country_name.split())
+    text_data = {f'Summary_of_{underscored_country_name}.txt': summary}
+
+    for text_file, content in text_data.items():
+        with open(f'static/{country_name}/{text_file}', 'w', encoding='utf-8') as file:
+            file.write(content)
+
+            logger.info(f'Completed downloading of {text_file}')
+
+
 def start_downloading():
-    with open('data/all_countries.json', 'r', encoding='utf-8') as file:
-        countries = json.load(file)
+    with open('data/the-world.txt', 'r', encoding='utf-8') as file:
+        countries = [line.strip() for line in file.readlines()]
 
         for country in countries:
-            country_name = country['name']
-            logger.info(f'Start downloading {country_name}')
+            logger.info(f'Start downloading {country}')
 
-            data = get_wiki_links(country_name)
+            data = get_wiki_links(country)
             link_collection = get_wiki_photos_from_links(data)
 
-            download_image(country_name, link_collection)
+            download_image(country, link_collection)
+            download_text_info(country)
 
 
 if __name__ == '__main__':
