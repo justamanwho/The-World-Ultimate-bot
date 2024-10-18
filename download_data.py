@@ -4,6 +4,7 @@ import wikipedia
 import requests
 import os
 import logging.config
+import logging
 
 
 logging.config.fileConfig('logging.conf')
