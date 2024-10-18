@@ -1,105 +1,11 @@
-from bs4 import BeautifulSoup
-import urllib.request
-import wikipedia
-import requests
+from download_data import start_downloading
+from telebot import TeleBot
 import logging
-import os
+
+bot = TeleBot(token='12345')
 
 
-def get_wiki_links(country):
-    wikipedia.set_lang('en')
-    page_name = wikipedia.search(country)[0]
-    page = wikipedia.WikipediaPage(page_name)
-    page_html = page.html()
-
-    soup = BeautifulSoup(page_html, 'html.parser')
-
-    anchor_elements = [link for link in soup.find_all('a', class_='mw-file-description', limit=4)]
-    links = [f'https://en.wikipedia.org' + link['href'] for link in anchor_elements]
-
-    flag, emblem = links[0], links[1]
-
-    underscored_country_name = '_'.join(country.split())
-    files_data = {f'The_Flag_of_{underscored_country_name}': flag, f'The_Coat_of_Arms_of_{underscored_country_name}': emblem}
-
-    # key_map_words = ('location', 'orthographic', 'map', 'earth', 'world')
-
-    # If the Country has A Seal of State, then it's added. Otherwise, it's just the map
-    undefined = str(anchor_elements[2]).lower()
-    if 'seal' in undefined:
-        files_data[f'The_Seal_of_State_of_{underscored_country_name}'] = links[2]
-        files_data[f'The_Map_of_{underscored_country_name}'] = links[3]
-    else:
-        files_data[f'The_Map_of_{underscored_country_name}'] = links[2]
-
-    return files_data
-
-
-def get_wiki_photos_from_links(files_data):
-    link_collection = dict()
-
-    for file_name, link in files_data.items():
-        soup = BeautifulSoup(requests.get(link).text, 'html.parser')
-        parent_div = soup.find('div', {'class': 'fullImageLink', 'id': 'file'})
-
-        if parent_div:
-            link = 'https:' + parent_div.find('a')['href']
-            link_collection[file_name] = link
-
-    return link_collection
-
-
-# add argument
-def download_image(country_name, link_collection):
-    for file_name, link in link_collection.items():
-        try:
-            directory = f'static/{country_name}'
-            os.makedirs(directory, exist_ok=True)
-
-            extention = link.split(".")[-1]
-            file_path = f'{directory}/{file_name}.{extention}'
-            urllib.request.urlretrieve(link, file_path)
-
-            logger.info(f'Completed downloading of {file_path} with link {link}')
-        except Exception:
-            logger.error(f"Wasn't able to download {file_name} with link {link}")
-
-
-def download_text_info(country_name):
-    summary = wikipedia.summary(country_name, sentences=2).split('.')[1]
-
-    underscored_country_name = '_'.join(country_name.split())
-    text_data = {f'Summary_of_{underscored_country_name}.txt': summary}
-
-    for text_file, content in text_data.items():
-        with open(f'static/{country_name}/{text_file}', 'w', encoding='utf-8') as file:
-            file.write(content)
-
-            logger.info(f'Completed downloading of {text_file}')
-
-
-def start_downloading():
-    with open('data/the-world.txt', 'r', encoding='utf-8') as file:
-        countries = [line.strip() for line in file.readlines()]
-
-        for country in countries:
-            logger.info(f'Start downloading {country}')
-
-            data = get_wiki_links(country)
-            link_collection = get_wiki_photos_from_links(data)
-
-            download_image(country, link_collection)
-            download_text_info(country)
 
 
 if __name__ == '__main__':
-    logger = logging.getLogger(__name__)
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(levelname)s | %(name)s | %(asctime)s | %(message)s',
-        datefmt='%H:%M:%S'
-    )
-    file_handler = logging.FileHandler(f'{logger.name}.log')
-    logger.addHandler(file_handler)
-
-    start_downloading()
+    bot.infinity_polling()
