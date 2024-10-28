@@ -22,4 +22,3 @@ I've made sure to credit the authors of the maps. If you are one of them, thx an
 
 Future Plans:
 - Make Downloading Asynco
-- Arctica is not a COUNTRY lol. Make for continents their own logic of downloading.

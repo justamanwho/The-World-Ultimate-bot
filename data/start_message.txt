@@ -1,0 +1,12 @@
+You just type the country name, and I give you:
+
+- Map
+- Flag
+- Emblem
+- Capital
+- Area in km^2
+- Population
+- Currency
+- Current Time
+- GDP
+- Some info about the country
