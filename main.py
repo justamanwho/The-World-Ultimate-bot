@@ -1,24 +1,25 @@
-from download_data import start_downloading
-from typing import IO
 from telebot import TeleBot, types
 from dotenv import load_dotenv
-from io import BytesIO
-from PIL import Image
-import logging.config
 import logging
 import os
+from difflib import SequenceMatcher
 
-
-logging.config.fileConfig('logging.conf')
-logger = logging.getLogger('Running')
 
 load_dotenv('.env')
-
 bot_name: str = os.getenv('BOT_NAME')
 token: str = os.getenv('BOT_TOKEN')
 bot = TeleBot(token, threaded=True)
 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(levelname)s | %(name)s | %(asctime)s | %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+for handler in (logging.FileHandler(f'{logger.name}.log', encoding='utf-8'), logging.StreamHandler()):
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 file_objects = dict()
 
@@ -29,27 +30,19 @@ def message_reply(msg: types.Message):
     message = msg
     text = message.text
 
-    # for country in the_world:
-    #     # add regex or better use comparing tool and make like 90% purity or some shit
-    #     if country == text:
-    #
-    #         filepaths = file_objects[country]
-    #         for filepath in filepaths:
-    #             file_object, ext = get_file_object(country, filepath)
-    #
-    #             send_by_name_ext(file_object, ext)
+    for country in countries:
+        if SequenceMatcher(None, country, text).ratio() > 0.7:
+            filepaths = file_objects[country]
+            for filename, file_object in filepaths.items():
+                ext = filename.split('.')[-1].lower()
 
-    filepaths = file_objects['Afghanistan']
-    print(filepaths)
-    for filename, file_object in filepaths.items():
-        ext = filename.split('.')[-1].lower()
-
-        send_by_name_ext(file_object, ext=ext)
+                send_by_name_ext(file_object, ext)
+            break
 
 
 def preload_files() -> None:
 
-    directories = f'static'
+    directories = f'The-World\static'
 
     for directory in os.listdir(directories):
         dir_path = os.path.join(directories, directory)
@@ -62,12 +55,13 @@ def preload_files() -> None:
                 # Open the file in text or binary mode
                 if filename.endswith('.txt'):
                     file_objects[directory][filename] = open(filepath, 'r', encoding='utf-8')
-                else:
+
+                elif filename.endswith('.png'):
                     file_objects[directory][filename] = open(filepath, 'rb')
 
             logger.info(f'Preloaded Directory {directory}')
 
-    with open('data/start_message.txt', 'r') as readme:
+    with open('start_message.txt', 'r') as readme:
         global start_message
         start_message = readme.read()
 
@@ -80,24 +74,7 @@ def close_files() -> None:
                 logger.info(f"Closed File {file_object.name}")
 
 
-# def find_everything(country):
-#     try:
-#         directory = f'static\{country}'
-#         country_file_paths = []
-#
-#         for filename in os.listdir(directory):
-#             filepath = os.path.join(directory, filename)
-#
-#             country_file_paths.append(filepath)
-#
-#         return country_file_paths
-#
-#     except Exception:
-#         logging.error(f'Error occurred while trying to reach the {country} directory')
-
-
 def get_file_object(filename: str, filepath: str):
-
     file_object = file_objects.get(filename).get(filepath)
 
     return file_object
@@ -105,24 +82,12 @@ def get_file_object(filename: str, filepath: str):
 
 def send_by_name_ext(file_object, ext):
     try:
+        file_object.seek(0)
+
         if ext == 'txt':
             bot.send_message(message.chat.id, file_object)
-        elif ext == 'svg':
-            # change it to photo somehow
-            bot.send_document(message.chat.id, file_object)
         else:
-            file_object.seek(0)
-
-            image = Image.open(file_object)
-
-            ext = 'jpeg' if ext in ['jpg', 'jfif'] else ext
-            image = image.convert('RGB') if image.mode == 'RGBA' else image
-
-            image_data = BytesIO()
-            image.save(image_data, format=ext.upper())
-            image_data.seek(0)
-
-            bot.send_photo(message.chat.id, image)
+            bot.send_photo(message.chat.id, file_object)
 
         logger.info(f'File {file_object.name.split("/")[-1]} has been sent')
     except Exception as e:
@@ -146,8 +111,9 @@ def error_handling() -> None:
 if __name__ == '__main__':
     preload_files()
 
-    with open('data/the-world.txt', 'r', encoding='utf-8') as the_world:
-        the_world = [country.strip() for country in the_world.readlines()]
+    with open('The-World/the-world.txt', 'r', encoding='utf-8') as the_world:
+        countries = [country.strip() for country in the_world.readlines()]
+        print(countries)
         bot.infinity_polling()
 
     close_files()
