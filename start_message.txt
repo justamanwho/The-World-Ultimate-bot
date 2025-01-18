@@ -1,14 +1,14 @@
-You just type the country name, and I give you:
+You just type in the country name, and I give you:
 
+- Coat of Arms
 - Map
 - Flag
-- Coat of Arms
 - Seal
 - Capital
+- Summary
 - Area in km^2
 - Population
 - GDP
 - Currency
-- Summary
 
-Note: If the country does not have officially the Coat of Arms or Seal, the bot doesn't send it.
+Note: If the country does not have officially the Emblem or the Seal, the bot doesn't send it.

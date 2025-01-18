@@ -1,8 +1,9 @@
 from telebot import TeleBot, types
 from dotenv import load_dotenv
+from rapidfuzz import process
 import logging
+import json
 import os
-from difflib import SequenceMatcher
 
 
 load_dotenv('.env')
@@ -30,14 +31,50 @@ def message_reply(msg: types.Message):
     message = msg
     text = message.text
 
-    for country in countries:
-        if SequenceMatcher(None, country, text).ratio() > 0.7:
-            filepaths = file_objects[country]
-            for filename, file_object in filepaths.items():
-                ext = filename.split('.')[-1].lower()
+    key_start_words = ['start', 'help', 'instructions', '/start', '/help', '/instructions']
+    if text in key_start_words:
+        send_start_message()
+    else:
+        country = find_country_name(text)
+        if country:
+            send_country_data(country)
+        else:
+            error_handling()
 
-                send_by_name_ext(file_object, ext)
-            break
+
+def find_country_name(text):
+    text = text.upper()
+    best_match = ''
+
+    for key, values in countries.items():
+        aliases = [key.upper()]
+        aliases.extend([value.upper() for value in values])
+
+        try:
+            match = process.extractOne(text, aliases, score_cutoff=95)
+            if match:
+                best_match = key
+        except TypeError or ValueError:
+            pass
+
+    if best_match:
+        return file_objects[best_match]
+    else:
+        return None
+
+
+def send_country_data(data):
+    files_needed = ['The_Coat_of_Arms.png', 'The_Flag.png', 'The_Map.png', 'The_Seal.png',
+                    'Capital.txt', 'Summary.txt', 'Area.txt', 'Population.txt', 'GDP.txt', 'Currency.txt']
+
+    for file_path in files_needed:
+        ext = file_path.split('.')[-1].lower()
+
+        try:
+            file_object = data[file_path]
+            send_by_name_ext(file_object, ext)
+        except KeyError:
+            pass
 
 
 def preload_files() -> None:
@@ -102,18 +139,17 @@ def send_start_message() -> None:
 def error_handling() -> None:
     logger.info(f'Incorrect message: {message.text}')
 
-    bot.reply_to(message, "Country doesn't exist", reply_markup=markup)
-    img, ext = get_file_object('The World', 'The-World.png')
-
-    send_by_name_ext(img, ext)
+    bot.reply_to(message, 'Not found. Please, try to type in an official name\nor alpha2/alpha3 code such as LU/LUX', reply_markup=markup)
+    # img, ext = get_file_object('The World', 'The-World.png')
+    # send_by_name_ext(img, ext)
 
 
 if __name__ == '__main__':
     preload_files()
 
-    with open('The-World/the-world.txt', 'r', encoding='utf-8') as the_world:
-        countries = [country.strip() for country in the_world.readlines()]
-        print(countries)
+    with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
+        countries = json.load(json_file)
+
         bot.infinity_polling()
 
     close_files()
