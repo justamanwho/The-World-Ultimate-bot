@@ -1,0 +1,6 @@
+[submodule "The-World"]
+	path = The-World
+	url = https://github.com/justamanwho/The-World.git
+[submodule "Countries-Aliases"]
+	path = Countries-Aliases
+	url = https://github.com/justamanwho/Countries-Aliases.git

@@ -34,6 +34,8 @@ def message_reply(msg: types.Message):
     key_start_words = ['start', 'help', 'instructions', '/start', '/help', '/instructions']
     if text in key_start_words:
         send_start_message()
+    if text == 'The World':
+        send_by_name_ext(file_objects['The World'], 'png')
     else:
         country = find_country_name(text)
         if country:
@@ -98,6 +100,9 @@ def preload_files() -> None:
 
             logger.info(f'Preloaded Directory {directory}')
 
+    # The Map of The World
+    file_objects['The World'] = open('The-World-Map.png', 'rb')
+
     with open('start_message.txt', 'r') as readme:
         global start_message
         start_message = readme.read()
@@ -133,15 +138,15 @@ def send_by_name_ext(file_object, ext):
 
 def send_start_message() -> None:
     bot.send_message(message.chat.id, start_message)
+
     logger.info(f'Start Message has been sent')
 
 
 def error_handling() -> None:
-    logger.info(f'Incorrect message: {message.text}')
-
+    send_by_name_ext(file_objects['The World'], 'png')
     bot.reply_to(message, 'Not found. Please, try to type in an official name\nor alpha2/alpha3 code such as LU/LUX', reply_markup=markup)
-    # img, ext = get_file_object('The World', 'The-World.png')
-    # send_by_name_ext(img, ext)
+
+    logger.info(f'Incorrect message: {message.text}')
 
 
 if __name__ == '__main__':
