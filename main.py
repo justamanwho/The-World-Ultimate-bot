@@ -1,6 +1,6 @@
 from telebot import TeleBot, types
 from dotenv import load_dotenv
-from rapidfuzz import process
+from fuzzywuzzy import fuzz
 import logging
 import json
 import os
@@ -47,21 +47,32 @@ def message_reply(msg: types.Message):
 def find_country_name(text):
     text = text.upper()
     best_match = ''
+    highest_similarity = 0
 
     for key, values in countries.items():
         aliases = [key.upper()]
         aliases.extend([value.upper() for value in values])
 
-        try:
-            match = process.extractOne(text, aliases, score_cutoff=95)
-            if match:
-                best_match = key
-        except TypeError or ValueError:
-            pass
+        for alias in aliases:
+            try:
+                similarity = fuzz.ratio(text, alias)
 
-    if best_match:
-        return file_objects[best_match]
+                # Update best match if the similarity is higher than the previous highest
+                if similarity > highest_similarity:
+                    highest_similarity = similarity
+                    best_match = key
+
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error comparing '{text}' with '{alias}': {e}")
+                continue
+
+    if best_match and highest_similarity > 65:
+        logger.info(f'Matched {text} with {best_match} by {highest_similarity} similarity')
+
+        return file_objects.get(best_match, None)
     else:
+        logger.info(f'Similarity of {text} with {best_match} was too low: {highest_similarity}')
+
         return None
 
 

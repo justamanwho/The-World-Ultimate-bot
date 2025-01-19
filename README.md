@@ -21,5 +21,4 @@
 
 
 # To do list:
-- Change the similarity search module, since this one sucks.
 - Every continent with country names on it, so the user can write 'Europe' and see the countries he can type in.
