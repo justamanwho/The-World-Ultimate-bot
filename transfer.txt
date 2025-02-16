@@ -1,0 +1,37 @@
+Feb 16 20:17:57 debian-server gunicorn[20362]: [2025-02-16 20:17:57 +0100] [20362] [ERROR] Worker (pid:20363) exited with code 3
+Feb 16 20:17:57 debian-server gunicorn[20362]: [2025-02-16 20:17:57 +0100] [20362] [ERROR] Worker (pid:20365) was sent SIGTERM!
+Feb 16 20:17:57 debian-server gunicorn[20362]: [2025-02-16 20:17:57 +0100] [20362] [ERROR] Worker (pid:20364) exited with code 3
+Feb 16 20:17:57 debian-server gunicorn[20362]: Traceback (most recent call last):
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 209, in run
+Feb 16 20:17:57 debian-server gunicorn[20362]:     self.sleep()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 360, in sleep
+Feb 16 20:17:57 debian-server gunicorn[20362]:     ready = select.select([self.PIPE[0]], [], [], 1.0)
+Feb 16 20:17:57 debian-server gunicorn[20362]:             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 242, in handle_chld
+Feb 16 20:17:57 debian-server gunicorn[20362]:     self.reap_workers()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 530, in reap_workers
+Feb 16 20:17:57 debian-server gunicorn[20362]:     raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+Feb 16 20:17:57 debian-server gunicorn[20362]: gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>
+Feb 16 20:17:57 debian-server gunicorn[20362]: During handling of the above exception, another exception occurred:
+Feb 16 20:17:57 debian-server gunicorn[20362]: Traceback (most recent call last):
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/bin/gunicorn", line 8, in <module>
+Feb 16 20:17:57 debian-server gunicorn[20362]:     sys.exit(run())
+Feb 16 20:17:57 debian-server gunicorn[20362]:              ^^^^^
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/app/wsgiapp.py", line 67, in run
+Feb 16 20:17:57 debian-server gunicorn[20362]:     WSGIApplication("%(prog)s [OPTIONS] [APP_MODULE]", prog=prog).run()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 236, in run
+Feb 16 20:17:57 debian-server gunicorn[20362]:     super().run()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/app/base.py", line 72, in run
+Feb 16 20:17:57 debian-server gunicorn[20362]:     Arbiter(self).run()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 229, in run
+Feb 16 20:17:57 debian-server gunicorn[20362]:     self.halt(reason=inst.reason, exit_status=inst.exit_status)
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 342, in halt
+Feb 16 20:17:57 debian-server gunicorn[20362]:     self.stop()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 396, in stop
+Feb 16 20:17:57 debian-server gunicorn[20362]:     time.sleep(0.1)
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 242, in handle_chld
+Feb 16 20:17:57 debian-server gunicorn[20362]:     self.reap_workers()
+Feb 16 20:17:57 debian-server gunicorn[20362]:   File "/media/myfiles/projects/The-World-Ultimate-bot/venv/lib/python3.11/site-packages/gunicorn/arbiter.py", line 530, in reap_workers
+Feb 16 20:17:57 debian-server gunicorn[20362]:     raise HaltServer(reason, self.WORKER_BOOT_ERROR)
+Feb 16 20:17:57 debian-server gunicorn[20362]: gunicorn.errors.HaltServer: <HaltServer 'Worker failed to boot.' 3>
+

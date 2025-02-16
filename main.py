@@ -28,8 +28,8 @@ bot = TeleBot(TOKEN, threaded=True)
 app = Flask(__name__)
 
 
-# with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
-#     countries = json.load(json_file)
+with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
+    countries = json.load(json_file)
 file_objects = dict()
 
 
@@ -56,15 +56,15 @@ def preload_files() -> None:
 
 
 
-# preload_files()
+preload_files()
 
-# @app.route(f"/the-world-webhook", methods=['POST'])
-# def receive_update():
-#     update = request.get_json()
-#     update = types.Update.de_json(update)
-#     bot.process_new_updates([update])
-#
-#     return jsonify({"status": "ok"}), 200
+@app.route(f"/the-world-webhook", methods=['POST'])
+def receive_update():
+    update = request.get_json()
+    update = types.Update.de_json(update)
+    bot.process_new_updates([update])
+
+    return jsonify({"status": "ok"}), 200
 
 
 @bot.message_handler()
@@ -184,10 +184,10 @@ if __name__ == '__main__':
 
 
         # bot.remove_webhook()
-        # response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
-        # print(response.json())
+        response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
+        print(response.json())
 
-        bot.infinity_polling()
-        # app.run(host='127.0.0.1', port=8445)
+        # bot.infinity_polling()
+        app.run(host='127.0.0.1', port=8445)
 
     # close_files()
