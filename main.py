@@ -28,14 +28,13 @@ bot = TeleBot(TOKEN, threaded=True)
 app = Flask(__name__)
 
 
-with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
-    countries = json.load(json_file)
+# with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
+#     countries = json.load(json_file)
 file_objects = dict()
 
 
 def preload_files() -> None:
-
-    directories = f'The-World/static'
+    directories = 'The-World/static'
 
     for directory in os.listdir(directories):
         dir_path = os.path.join(directories, directory)
@@ -44,33 +43,28 @@ def preload_files() -> None:
 
             for filename in os.listdir(dir_path):
                 filepath = os.path.join(dir_path, filename)
-
-                # Open the file in text or binary mode
-                if filename.endswith('.txt'):
-                    file_objects[directory][filename] = open(filepath, 'r', encoding='utf-8')
-
-                elif filename.endswith('.png'):
-                    file_objects[directory][filename] = open(filepath, 'rb')
+                file_objects[directory][filename] = filepath  # Store file path instead of open file object
 
             logger.info(f'Preloaded Directory {directory}')
 
-    # The Map of The World
-    file_objects['The World'] = open('The-World-Map.png', 'rb')
+    # Store path instead of keeping the file open
+    file_objects['The World'] = 'The-World-Map.png'
 
-    with open('start_message.txt', 'r') as readme:
+    with open('start_message.txt', 'r', encoding='utf-8') as readme:
         global start_message
         start_message = readme.read()
 
 
-preload_files()
 
-@app.route(f"/the-world-webhook", methods=['POST'])
-def receive_update():
-    update = request.get_json()
-    update = types.Update.de_json(update)
-    bot.process_new_updates([update])
+# preload_files()
 
-    return jsonify({"status": "ok"}), 200
+# @app.route(f"/the-world-webhook", methods=['POST'])
+# def receive_update():
+#     update = request.get_json()
+#     update = types.Update.de_json(update)
+#     bot.process_new_updates([update])
+#
+#     return jsonify({"status": "ok"}), 200
 
 
 @bot.message_handler()
@@ -132,8 +126,8 @@ def send_country_data(data):
         ext = file_path.split('.')[-1].lower()
 
         try:
-            file_object = data[file_path]
-            send_by_name_ext(file_object, ext)
+            filepath = data[file_path]  # Get file path instead of object
+            send_by_name_ext(filepath, ext)
         except KeyError:
             pass
 
@@ -144,18 +138,19 @@ def get_file_object(filename: str, filepath: str):
     return file_object
 
 
-def send_by_name_ext(file_object, ext):
+def send_by_name_ext(filename, ext):
     try:
-        file_object.seek(0)
+        mode = 'rb' if ext != 'txt' else 'r'
+        with open(filename, mode, encoding=None if ext != 'txt' else 'utf-8') as file_object:
+            if ext == 'txt':
+                bot.send_message(message.chat.id, file_object.read())
+            else:
+                bot.send_photo(message.chat.id, file_object)
 
-        if ext == 'txt':
-            bot.send_message(message.chat.id, file_object)
-        else:
-            bot.send_photo(message.chat.id, file_object)
+        logger.info(f'File {filename} has been sent')
 
-        logger.info(f'File {file_object.name.split("/")[-1]} has been sent')
     except Exception as e:
-        logger.error(f'Error while sending {file_object.name.split("/")[-1]} \n Traceback: {e}')
+        logger.error(f'Error while sending {filename} \n Traceback: {e}')
 
 
 def send_start_message() -> None:
@@ -171,13 +166,13 @@ def error_handling() -> None:
     logger.info(f'Incorrect message: {message.text}')
 
 
-def close_files() -> None:
-    for country in file_objects.values():
-        for file_object in country.values():
-            if file_object:
-                file_object.close()
-                logger.info(f"Closed File {file_object.name}")
-
+# def close_files() -> None:
+#     for country in file_objects.values():
+#         for file_object in country.values():
+#             if file_object:
+#                 file_object.close()
+#                 logger.info(f"Closed File {file_object.name}")
+#
 
 # Gunicorn Doesn't see it!
 if __name__ == '__main__':
@@ -186,10 +181,13 @@ if __name__ == '__main__':
     with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
         countries = json.load(json_file)
 
-        # bot.infinity_polling()
 
-        response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
-        print(response.json())
-        app.run(host='127.0.0.1', port=8445)
 
-    close_files()
+        # bot.remove_webhook()
+        # response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
+        # print(response.json())
+
+        bot.infinity_polling()
+        # app.run(host='127.0.0.1', port=8445)
+
+    # close_files()
