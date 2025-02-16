@@ -1,6 +1,12 @@
+pyTelegramBotAPI==4.12.0
+beautifulsoup4~=4.12.3
 python-dotenv~=1.0.1
+fuzzywuzzy==0.18.0
+pycountry~=24.6.1
 rapidfuzz~=3.7.0
 wikipedia~=1.4.0
 requests~=2.32.3
-beautifulsoup4~=4.12.3
-pycountry~=24.6.1
+gunicorn==22.0.0
+Flask~=2.0.3
+gunicorn==22.0.0
+Werkzeug<2.1

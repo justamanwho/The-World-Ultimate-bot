@@ -1,16 +1,11 @@
+from flask import Flask, request, jsonify
 from telebot import TeleBot, types
 from dotenv import load_dotenv
 from fuzzywuzzy import fuzz
+import requests
 import logging
 import json
 import os
-
-
-load_dotenv('.env')
-bot_name: str = os.getenv('BOT_NAME')
-token: str = os.getenv('BOT_TOKEN')
-bot = TeleBot(token, threaded=True)
-markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 
 
 logger = logging.getLogger(__name__)
@@ -22,7 +17,60 @@ for handler in (logging.FileHandler(f'{logger.name}.log', encoding='utf-8'), log
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+
+load_dotenv('.env')
+WEBHOOK_URL: str = os.getenv('BOT_WEBHOOK')
+BOT_NAME: str = os.getenv('BOT_NAME')
+TOKEN: str = os.getenv('BOT_TOKEN')
+
+markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+bot = TeleBot(TOKEN, threaded=True)
+app = Flask(__name__)
+
+
+with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
+    countries = json.load(json_file)
 file_objects = dict()
+
+
+def preload_files() -> None:
+
+    directories = f'The-World/static'
+
+    for directory in os.listdir(directories):
+        dir_path = os.path.join(directories, directory)
+        if os.path.isdir(dir_path):
+            file_objects[directory] = {}  # Initialize once per directory
+
+            for filename in os.listdir(dir_path):
+                filepath = os.path.join(dir_path, filename)
+
+                # Open the file in text or binary mode
+                if filename.endswith('.txt'):
+                    file_objects[directory][filename] = open(filepath, 'r', encoding='utf-8')
+
+                elif filename.endswith('.png'):
+                    file_objects[directory][filename] = open(filepath, 'rb')
+
+            logger.info(f'Preloaded Directory {directory}')
+
+    # The Map of The World
+    file_objects['The World'] = open('The-World-Map.png', 'rb')
+
+    with open('start_message.txt', 'r') as readme:
+        global start_message
+        start_message = readme.read()
+
+
+preload_files()
+
+@app.route(f"/the-world-webhook", methods=['POST'])
+def receive_update():
+    update = request.get_json()
+    update = types.Update.de_json(update)
+    bot.process_new_updates([update])
+
+    return jsonify({"status": "ok"}), 200
 
 
 @bot.message_handler()
@@ -90,43 +138,6 @@ def send_country_data(data):
             pass
 
 
-def preload_files() -> None:
-
-    directories = f'The-World\static'
-
-    for directory in os.listdir(directories):
-        dir_path = os.path.join(directories, directory)
-        if os.path.isdir(dir_path):
-            file_objects[directory] = {}  # Initialize once per directory
-
-            for filename in os.listdir(dir_path):
-                filepath = os.path.join(dir_path, filename)
-
-                # Open the file in text or binary mode
-                if filename.endswith('.txt'):
-                    file_objects[directory][filename] = open(filepath, 'r', encoding='utf-8')
-
-                elif filename.endswith('.png'):
-                    file_objects[directory][filename] = open(filepath, 'rb')
-
-            logger.info(f'Preloaded Directory {directory}')
-
-    # The Map of The World
-    file_objects['The World'] = open('The-World-Map.png', 'rb')
-
-    with open('start_message.txt', 'r') as readme:
-        global start_message
-        start_message = readme.read()
-
-
-def close_files() -> None:
-    for country in file_objects.values():
-        for file_object in country.values():
-            if file_object:
-                file_object.close()
-                logger.info(f"Closed File {file_object.name}")
-
-
 def get_file_object(filename: str, filepath: str):
     file_object = file_objects.get(filename).get(filepath)
 
@@ -160,12 +171,25 @@ def error_handling() -> None:
     logger.info(f'Incorrect message: {message.text}')
 
 
+def close_files() -> None:
+    for country in file_objects.values():
+        for file_object in country.values():
+            if file_object:
+                file_object.close()
+                logger.info(f"Closed File {file_object.name}")
+
+
+# Gunicorn Doesn't see it!
 if __name__ == '__main__':
     preload_files()
 
     with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
         countries = json.load(json_file)
 
-        bot.infinity_polling()
+        # bot.infinity_polling()
+
+        response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
+        print(response.json())
+        app.run(host='127.0.0.1', port=8445)
 
     close_files()
