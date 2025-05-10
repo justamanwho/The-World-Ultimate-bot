@@ -19,12 +19,12 @@ for handler in (logging.FileHandler(f'{logger.name}.log', encoding='utf-8'), log
 
 
 load_dotenv('.env')
-WEBHOOK_URL: str = os.getenv('BOT_WEBHOOK')
+BOT_WEBHOOK: str = os.getenv('BOT_WEBHOOK')
+BOT_TOKEN: str = os.getenv('BOT_TOKEN')
 BOT_NAME: str = os.getenv('BOT_NAME')
-TOKEN: str = os.getenv('BOT_TOKEN')
 
 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-bot = TeleBot(TOKEN, threaded=True)
+bot = TeleBot(BOT_TOKEN, threaded=True)
 app = Flask(__name__)
 
 
@@ -55,8 +55,8 @@ def preload_files() -> None:
         start_message = readme.read()
 
 
-
 preload_files()
+
 
 @app.route(f"/the-world-webhook", methods=['POST'])
 def receive_update():
@@ -181,10 +181,8 @@ if __name__ == '__main__':
     with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
         countries = json.load(json_file)
 
-
-
         # bot.remove_webhook()
-        response = requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={WEBHOOK_URL}")
+        response = requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/setWebhook?url={BOT_WEBHOOK}")
         print(response.json())
 
         # bot.infinity_polling()
