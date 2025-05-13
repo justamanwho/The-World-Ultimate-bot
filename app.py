@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from fuzzywuzzy import fuzz
 import requests
 import logging
+import atexit
 import json
 import os
 
@@ -25,7 +26,16 @@ BOT_NAME: str = os.getenv('BOT_NAME')
 
 markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 bot = TeleBot(BOT_TOKEN, threaded=True)
+
 app = Flask(__name__)
+logger.info("Website is live")
+
+
+def app_shutdown():
+    logger.info("Website is shut down")
+
+
+atexit.register(app_shutdown)
 
 
 with open('Countries-Aliases/aliases.json', 'r', encoding='utf-8') as json_file:
