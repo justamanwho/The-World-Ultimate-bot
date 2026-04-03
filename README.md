@@ -1,3 +1,7 @@
+# Description:
+A simple bot that fetches and displays key information about any country. Enter a country name, and the bot returns a complete overview including visual elements (coat of arms, map, flag, seal) and essential statistics (capital, population, area, GDP, currency).
+
+
 # Input: 
 - Country name
 
@@ -21,11 +25,11 @@
 - Telegram Bot doesn't support sending the svg files :( , so I converted all the media to png.
 
 
-# Links:
-- telegram bot: https://t.me/The_World_ultimate_bot
+# Links and Sources:
+- telegram bot - https://t.me/The_World_ultimate_bot
+
+<img width="386" height="1012" alt="The-World-bot" src="https://github.com/user-attachments/assets/b9f3660a-1d84-4f66-b2ee-ab1954431a7c" />
 
 
 # To do list:
 - Every continent with country names on it, so the user can write 'Europe' and see the countries he can type in.
-
-<img width="386" height="1012" alt="The-World-bot" src="https://github.com/user-attachments/assets/b9f3660a-1d84-4f66-b2ee-ab1954431a7c" />
