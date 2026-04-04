@@ -28,11 +28,11 @@ markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 bot = TeleBot(BOT_TOKEN, threaded=True)
 
 app = Flask(__name__)
-logger.info("Website is live")
+logger.info("Bot is live")
 
 
 def app_shutdown():
-    logger.info("Website is shut down")
+    logger.info("Bot is shut down")
 
 
 atexit.register(app_shutdown)
